@@ -1,6 +1,6 @@
 package dev.rudiments.sample.domain
 
-import dev.rudiments.hardcore.dsl.{Command, ID, ID1, Ref}
+import dev.rudiments.hardcore.dsl.{Command, ID, Ref}
 import enumeratum.{Enum, EnumEntry}
 
 import scala.collection.immutable.IndexedSeq
@@ -10,20 +10,41 @@ case class GeneratorConfig(
   id: Long,
   name: String
 ) extends Command {
-  def generate = GeneratedValue(
+  def generate = GeneratedConfig(
     config = ID(id),
     data = DayOfWeek.values.map { day =>
-      day -> (1 to 10).map(_ => Random.nextInt(10))
+      day -> (-1 to 2)
     }.toMap
   )
 }
 
-case class GeneratedValue(
+case class GeneratedConfig(
   config: Ref[GeneratorConfig],
   data: Map[DayOfWeek, Seq[Int]]
+) {
+  def generate: Seq[GeneratedValues] = {
+    val size = data
+      .values
+      .map(_.size)
+      .product
+
+    (1 to size).map { i =>
+      GeneratedValues(
+        config = config,
+        id = i,
+        data = DayOfWeek.values.map(day => day -> Random.nextDouble()).toMap
+      )
+    }
+  }
+}
+
+case class GeneratedValues(
+  config: Ref[GeneratorConfig],
+  id: Int,
+  data: Map[DayOfWeek, Double]
 )
 
-sealed class DayOfWeek(shortName: String, num: Int) extends EnumEntry
+sealed class DayOfWeek(val shortName: String, val num: Int) extends EnumEntry
 
 object DayOfWeek extends Enum[DayOfWeek] {
   override def values: IndexedSeq[DayOfWeek] = findValues

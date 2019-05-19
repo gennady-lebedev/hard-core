@@ -3,7 +3,7 @@ package dev.rudiments.sample.domain.spec
 import dev.rudiments.hardcore.dsl._
 import dev.rudiments.hardcore.repo.memory.MemoryRepo
 import dev.rudiments.sample.domain.DayOfWeek._
-import dev.rudiments.sample.domain.{GeneratedValue, GeneratorConfig}
+import dev.rudiments.sample.domain.{GeneratedConfig, GeneratorConfig}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
@@ -14,17 +14,17 @@ class GeneratorSpec extends WordSpec with Matchers {
   implicit val configsMeta: Meta[GeneratorConfig] = Meta(value => ID(value.id))
   val configs: MemoryRepo[GeneratorConfig] = new MemoryRepo[GeneratorConfig]
 
-  implicit val generatedMeta: Meta[GeneratedValue] = Meta { value =>
+  implicit val generatedMeta: Meta[GeneratedConfig] = Meta { value =>
     value.config match {
       case ID1(v) => ID(v)
       case Instance(GeneratorConfig(id, _)) => ID(id)
       case other => ???
     }
   }
-  val generated: MemoryRepo[GeneratedValue] = new MemoryRepo[GeneratedValue]
+  val generated: MemoryRepo[GeneratedConfig] = new MemoryRepo[GeneratedConfig]
 
 
-  "config generating values" in {
+  "config generating config" in {
     val config = GeneratorConfig(1, "first")
     val generated = config.generate
     generated.config should be (ID(1))
@@ -32,6 +32,13 @@ class GeneratorSpec extends WordSpec with Matchers {
 
     all (generated.data.values.map(_.sum)) should be <= 100
     all (generated.data.values.map(_.sum)) should be >= 0
+  }
+
+  "config generating values" in {
+    val config = GeneratorConfig(1, "first")
+    val generated = config.generate
+    val values = generated.generate
+    values.size should be (16384)
   }
 
 }
