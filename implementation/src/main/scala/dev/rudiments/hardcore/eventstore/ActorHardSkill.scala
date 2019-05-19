@@ -8,34 +8,34 @@ import scala.concurrent.{Future, Promise}
 import scala.language.postfixOps
 
 
-class ActorHardSkill(val f: PF1)(implicit es: ActorMemory) extends HardSkill {
+class ActorHardSkill(val f: PF1)(implicit mind: ActorMind) extends HardSkill {
 
   override def async(command: Command): Future[Event] = {
     if(!f.isDefinedAt(command)) throw new MatchError(command)
     val promise = Promise[Event]
-    es.system.actorOf(ActorAction.props(f, command, promise)(es))
+    mind.system.actorOf(ActorAction.props(f, command, promise)(mind))
     promise.future
   }
 }
 
 
-class ActorAction(val f: PF1, val command: Command, val promise: Promise[Event])(implicit es: ActorMemory)
+class ActorAction(val f: PF1, val command: Command, val promise: Promise[Event])(implicit mind: ActorMind)
   extends Actor with StrictLogging with Action {
 
   import ActorAction._
   import MemoryActor._
-  es.ref ! ReadyToDo(command)
-  es.system.eventStream.subscribe(self, classOf[Done])
+  mind.ref ! ReadyToDo(command)
+  mind.system.eventStream.subscribe(self, classOf[Done])
   override def receive: Receive = {
     case GoOn(c: Command) if command == c =>
       val result = f match {
         case h: HardSkill => h.f(command)
-        case _: DependentSkill => ???
+        case _: SecondarySkill => ???
         case or: OrElseSkill => or.sync(command)
         case pf: PF1 => pf(command)
       }
       context.system.eventStream.unsubscribe(self)
-      es.ref ! Complete(command, result)
+      mind.ref ! Complete(command, result)
       promise.success(result)
 
     case InProgress(c: Command) if command == c =>
@@ -51,6 +51,6 @@ object ActorAction {
   case class Done(command: Command, event: Event)
   case class InProgress(command: Command)
 
-  def props(f: PF1, command: Command, promise: Promise[Event])(implicit es: ActorMemory): Props =
+  def props(f: PF1, command: Command, promise: Promise[Event])(implicit mind: ActorMind): Props =
     Props(new ActorAction(f, command, promise))
 }

@@ -3,14 +3,14 @@ package dev.rudiments.hardcore.eventstore.spec
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.StrictLogging
 import dev.rudiments.hardcore.dsl._
-import dev.rudiments.hardcore.eventstore.ActorMemory
+import dev.rudiments.hardcore.eventstore.ActorMind
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{AsyncFlatSpec, Matchers}
 
 
 @RunWith(classOf[JUnitRunner])
-class DependentSkillSpec extends AsyncFlatSpec with Matchers with StrictLogging {
+class SecondarySkillSpec extends AsyncFlatSpec with Matchers with StrictLogging {
   private implicit val actorSystem: ActorSystem = ActorSystem()
 
 
@@ -21,11 +21,11 @@ class DependentSkillSpec extends AsyncFlatSpec with Matchers with StrictLogging 
   private case class AtLast(done: Int, something: DoneSomething) extends Event
   private var counter = 0
 
-  private implicit val es: Memory with SkillSet = new ActorMemory().withSkill {
+  private implicit val es: Memory with SkillSet = new ActorMind().realize {
     case c: DoSomething =>
       Thread.sleep(100)
       DoneSomething(c.a.toString)
-  }.withDependency { case c: Boring => DoSomething(c.work.length + 42) } {
+  }.discover { case c: Boring => DoSomething(c.work.length + 42) } {
     case (c: Boring, d: DoneSomething) =>
       counter += 1
       Thread.sleep(100)

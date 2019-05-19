@@ -67,8 +67,8 @@ object OrElseSkill {
 }
 
 
-trait DependentSkill extends Skill {
-  val es: Memory
+trait SecondarySkill extends Skill {
+  val mind: Memory
   val f: PF2
   val r: Resolver
 
@@ -78,11 +78,11 @@ trait DependentSkill extends Skill {
     import scala.concurrent.ExecutionContext.Implicits.global
     Await.result(
       for {
-        c <- es.state(command).map {
+        c <- mind.state(command).map {
           case Some(_: NoHandler) => false
           case _ => true
         }
-        d <- es.state(r(command)).map {
+        d <- mind.state(r(command)).map {
           case Some(_: NoHandler) => false
           case _ => true
         }
@@ -114,7 +114,7 @@ trait Memory {
   def countEvents(): Future[Long]
 
   def skill(f: PF1): HardSkill
-  def dependent(r: Resolver)(f: PF2): DependentSkill
+  def dependent(r: Resolver)(f: PF2): SecondarySkill
 }
 
 trait SkillSet extends PF1 {
@@ -124,8 +124,8 @@ trait SkillSet extends PF1 {
 
 
 
-  def withSkill(g: PF1): SkillSet
-  def withDependency(r: Resolver)(g: PF2): SkillSet
+  def realize(g: PF1): SkillSet
+  def discover(r: Resolver)(g: PF2): SkillSet
 
   def skill: Skill
   def sync(command: Command): Event = skill.sync(command)

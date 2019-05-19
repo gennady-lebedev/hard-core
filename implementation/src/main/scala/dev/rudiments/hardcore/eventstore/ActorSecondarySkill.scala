@@ -6,35 +6,35 @@ import dev.rudiments.hardcore.dsl._
 
 import scala.concurrent.{Future, Promise}
 
-class DependentActorSkill(val f: PF2, val r: Resolver)(implicit val es: ActorMemory)
-  extends DependentSkill {
+class ActorSecondarySkill(val f: PF2, val r: Resolver)(implicit val mind: ActorMind)
+  extends SecondarySkill {
 
   override def async(command: Command): Future[Event] = {
     val promise = Promise[Event]
-    es.system.actorOf(DependentActorAction.props(f, command, r(command), promise)(es))
+    mind.system.actorOf(SecondaryActionActor.props(f, command, r(command), promise)(mind))
     promise.future
   }
 }
 
 
-class DependentActorAction(
+class SecondaryActionActor(
   val f: PF2,
   val command: Command,
   val dependency: Command,
   val promise: Promise[Event]
-)(implicit es: ActorMemory)
+)(implicit mind: ActorMind)
   extends Actor with StrictLogging with DependentAction {
 
   import MemoryActor._
   import ActorAction._
 
   private var canFire = false
-  es.ref ! ReadyToDo(command)
-  es.system.eventStream.subscribe(self, classOf[Done])
+  mind.ref ! ReadyToDo(command)
+  mind.system.eventStream.subscribe(self, classOf[Done])
   override def receive: Receive = {
     case GoOn(c) if command == c =>
       canFire = true
-      es.ref ! Requires(dependency)
+      mind.ref ! Requires(dependency)
 
     case InProgress(c) if command == c =>
       logger.debug("Command {} execution in progress", c)
@@ -48,18 +48,18 @@ class DependentActorAction(
     case Done(d, event) if dependency == d && canFire =>
       val result = f((command, event))
       context.system.eventStream.unsubscribe(self)
-      es.ref ! Complete(command, result)
+      mind.ref ! Complete(command, result)
       promise.success(result)
 
   }
 }
 
-object DependentActorAction {
+object SecondaryActionActor {
   def props(
     f: PF2,
     command: Command,
     dependency: Command,
     promise: Promise[Event]
-  )(implicit es: ActorMemory): Props =
-    Props(new DependentActorAction(f, command, dependency, promise))
+  )(implicit mind: ActorMind): Props =
+    Props(new SecondaryActionActor(f, command, dependency, promise))
 }

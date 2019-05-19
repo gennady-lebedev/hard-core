@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import com.typesafe.scalalogging.StrictLogging
 import dev.rudiments.hardcore.dsl.ID._
 import dev.rudiments.hardcore.dsl._
-import dev.rudiments.hardcore.eventstore.ActorMemory
+import dev.rudiments.hardcore.eventstore.ActorMind
 import dev.rudiments.hardcore.repo.memory.SyncMemoryRepo
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -21,7 +21,7 @@ class HardSkillSpec extends AsyncFlatSpec with Matchers with StrictLogging {
   private implicit val actorSystem: ActorSystem = ActorSystem()
   private implicit val meta: Meta[Example] = Meta(value => ID(value.id))
   private val repo: SyncMemoryRepo[Example] = new SyncMemoryRepo[Example]()
-  private implicit val es: Memory = new ActorMemory
+  private implicit val es: Memory = new ActorMind
 
   private val skill = es.skill(repo.handle)
 

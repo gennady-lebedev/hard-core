@@ -3,7 +3,7 @@ package dev.rudiments.hardcore.eventstore.spec
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.StrictLogging
 import dev.rudiments.hardcore.dsl._
-import dev.rudiments.hardcore.eventstore.ActorMemory
+import dev.rudiments.hardcore.eventstore.ActorMind
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{AsyncFlatSpec, Matchers}
@@ -14,7 +14,7 @@ import scala.concurrent.Future
 class HardSkillCompositionSpec extends AsyncFlatSpec with Matchers with StrictLogging {
 
   private implicit val actorSystem: ActorSystem = ActorSystem()
-  private implicit val es: Memory = new ActorMemory
+  private implicit val es: Memory = new ActorMind
 
   private case class DoSomething(a: Int) extends Command
   private case class DoneSomething(b: String) extends Event

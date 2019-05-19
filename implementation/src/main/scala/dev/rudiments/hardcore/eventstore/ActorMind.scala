@@ -8,7 +8,7 @@ import dev.rudiments.hardcore.dsl.{Command, Event, Memory, Skill, NoHandler, NoS
 import scala.collection.mutable
 import scala.concurrent.{Future, Promise}
 
-class ActorMemory()(implicit val system: ActorSystem) extends Memory with SkillSet {
+class ActorMind()(implicit val system: ActorSystem) extends Memory with SkillSet {
   val ref: ActorRef = system.actorOf(MemoryActor.props(this))
   private var skills: Skill = NoSkill
   override def skill: Skill = skills
@@ -24,22 +24,22 @@ class ActorMemory()(implicit val system: ActorSystem) extends Memory with SkillS
     promise.future
   }
 
-  override def withSkill(g: PF1): ActorMemory = {
+  override def realize(g: PF1): ActorMind = {
     skills = skills orElse skill(g)
     this
   }
 
-  override def withDependency(r: Resolver)(g: PF2): ActorMemory = {
+  override def discover(r: Resolver)(g: PF2): ActorMind = {
     skills = skills.orElse(dependent(r)(g))
     this
   }
 
   override def skill(f: PF1): ActorHardSkill = new ActorHardSkill(f)(this)
-  override def dependent(r: Resolver)(f: PF2): DependentActorSkill = new DependentActorSkill(f, r)(this)
+  override def dependent(r: Resolver)(f: PF2): ActorSecondarySkill = new ActorSecondarySkill(f, r)(this)
 }
 
 
-class MemoryActor(ts: SkillSet) extends Actor with StrictLogging {
+class MemoryActor(skills: SkillSet) extends Actor with StrictLogging {
   private val events = mutable.ArrayBuffer.empty[Event]
   private val commands = mutable.Map.empty[Command, Event]
 
@@ -68,12 +68,12 @@ class MemoryActor(ts: SkillSet) extends Actor with StrictLogging {
         case Some(dsl.InProgress) => sender() ! InProgress(dependency)
         case Some(exists) => sender() ! Done(dependency, exists)
 
-        case None if ts.isDefinedAt(dependency) =>
+        case None if skills.isDefinedAt(dependency) =>
           logger.debug("Resolving dependency {}", dependency)
-          ts.async(dependency)
+          skills.async(dependency)
           sender() ! InProgress(dependency)
 
-        case None if !ts.isDefinedAt(dependency) =>
+        case None if !skills.isDefinedAt(dependency) =>
           commands.put(dependency, NoHandler(dependency))
           publish(dependency, NoHandler(dependency))
       }
