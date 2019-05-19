@@ -24,6 +24,7 @@ configure(scalaModules()) {
             html.enabled = true
             junitXml.enabled = true
         }
+        maxHeapSize = "2048m"
         testLogging {
             events "skipped", "failed"
             exceptionFormat "short"
