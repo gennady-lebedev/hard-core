@@ -49,11 +49,21 @@ sealed class DayOfWeek(val shortName: String, val num: Int) extends EnumEntry
 object DayOfWeek extends Enum[DayOfWeek] {
   override def values: IndexedSeq[DayOfWeek] = findValues
 
-  case object Monday    extends DayOfWeek("Mon", 1)
-  case object Tuesday   extends DayOfWeek("Tue", 2)
-  case object Wednesday extends DayOfWeek("Wed", 3)
-  case object Thursday  extends DayOfWeek("Thu", 4)
-  case object Friday    extends DayOfWeek("Fri", 5)
-  case object Saturday  extends DayOfWeek("Sat", 6)
-  case object Sunday    extends DayOfWeek("Sun", 7)
+  def withShortName(string: String): DayOfWeek = string match {
+    case Monday.shortName => Monday
+    case Tuesday.shortName => Tuesday
+    case Wednesday.shortName => Wednesday
+    case Thursday.shortName => Thursday
+    case Friday.shortName => Friday
+    case Saturday.shortName => Saturday
+    case Sunday.shortName => Sunday
+  }
+
+  case object Monday    extends DayOfWeek("mon", 1)
+  case object Tuesday   extends DayOfWeek("tue", 2)
+  case object Wednesday extends DayOfWeek("wed", 3)
+  case object Thursday  extends DayOfWeek("thu", 4)
+  case object Friday    extends DayOfWeek("fri", 5)
+  case object Saturday  extends DayOfWeek("sat", 6)
+  case object Sunday    extends DayOfWeek("sun", 7)
 }

@@ -1,15 +1,16 @@
-package dev.rudiments.hardcore.http
+package dev.rudiments.sample
 
 import java.sql.{Date, Timestamp}
 
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import io.circe.Decoder.Result
-import io.circe.generic.extras.{AutoDerivation, Configuration}
-import io.circe.syntax._
-import io.circe._
 import dev.rudiments.hardcore.dsl.SortOrder.{Asc, Desc}
 import dev.rudiments.hardcore.dsl._
+import dev.rudiments.sample.domain.DayOfWeek
 import enumeratum.EnumEntry
+import io.circe.Decoder.Result
+import io.circe._
+import io.circe.generic.extras.{AutoDerivation, Configuration}
+import io.circe.syntax._
 
 object CirceSupport extends AutoDerivation with FailFastCirceSupport {
   implicit val configuration: Configuration = Configuration.default.withDefaults
@@ -57,4 +58,17 @@ object CirceSupport extends AutoDerivation with FailFastCirceSupport {
 
     override def apply(c: HCursor): Result[EnumEntry] = ???
   }
+
+  implicit def daysMapFormat[V: Encoder](implicit mapDecoder: Decoder[Map[String, V]]): Encoder[Map[DayOfWeek, V]] with Decoder[Map[DayOfWeek, V]] =
+    new Encoder[Map[DayOfWeek, V]] with Decoder[Map[DayOfWeek, V]]{
+      override def apply(a: Map[DayOfWeek, V]): Json = Json.obj(a.map { case (day, v) =>
+          day.shortName -> v.asJson
+      }.toSeq: _*)
+
+      override def apply(c: HCursor): Result[Map[DayOfWeek, V]] = implicitly[Decoder[Map[String, V]]].map { m =>
+        m.map { case (d, v) =>
+          DayOfWeek.withShortName(d) -> v
+        }
+      }.apply(c)
+    }
 }
