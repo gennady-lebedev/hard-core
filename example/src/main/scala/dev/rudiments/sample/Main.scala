@@ -6,7 +6,8 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import dev.rudiments.hardcore.http.{RootRouter, Router}
+import dev.rudiments.hardcore.http.{CrudRouter, IDPath, RootRouter, Router}
+import dev.rudiments.sample.domain.{GeneratedConfig, GeneratedValues, GeneratorConfig}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -17,9 +18,19 @@ object Main extends App with LazyLogging {
   implicit val ec: ExecutionContext = actorSystem.dispatcher
   implicit val mat: ActorMaterializer = ActorMaterializer()
 
+  import CirceSupport._
+  import AppContext._
+  import dev.rudiments.sample.skill.Generator._
+
   try {
     val config = ConfigFactory.load()
-    new RootRouter(config, new HealthRouter, AppContext.itemRouter).bind()
+    new RootRouter(config,
+      new HealthRouter,
+      new CrudRouter[Item]("item", itemRepo, IDPath[Item, Long]),
+      new CrudRouter[GeneratorConfig]("config", configs, IDPath[GeneratorConfig, Long]),
+      new CrudRouter[GeneratedConfig]("generated", generatedConfigs, IDPath[GeneratedConfig, Long]),
+      new CrudRouter[GeneratedValues]("values", generatedValues, IDPath[GeneratedValues, Long])
+    ).bind()
   } catch {
     case e: Throwable =>
       logger.error("Error while initializing app, shutdown", e)
