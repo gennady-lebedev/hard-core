@@ -8,12 +8,9 @@ import dev.rudiments.sample.domain.{GeneratedConfig, GeneratedValues, GeneratorC
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.Matchers._
 
 @RunWith(classOf[JUnitRunner])
 class GeneratorSpec extends WordSpec with Matchers {
-
-
 
   "config generating config" in {
     val config = GeneratorConfig(1, "first")

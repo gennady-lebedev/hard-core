@@ -9,7 +9,7 @@ import dev.rudiments.hardcore.dsl._
 
 class CrudRouter[A : Meta : Encoder : Decoder](
   prefix: String,
-  handler: PartialFunction[Command, Event],
+  handler: PF1,
   idDirective: Directive1[ID[A]]
 ) extends Router {
   import dev.rudiments.hardcore.http.CirceSupport._
@@ -18,7 +18,7 @@ class CrudRouter[A : Meta : Encoder : Decoder](
   override val routes: Route = pathPrefix(prefix) {
     pathEndOrSingleSlash {
       get {
-        complete(s"GET Query on $prefix")
+        responseWith(handler(Query.all))
       } ~ post {
         entity(as[A]) { value =>
           responseWith(handler(Create(value.identify, value)))
@@ -44,6 +44,8 @@ class CrudRouter[A : Meta : Encoder : Decoder](
   }
 
   def responseWith(event: Event): StandardRoute = event match {
+    case c: QueryResult[A] =>  complete(StatusCodes.OK, c.values)
+
     case c: Created[_, A] =>  complete(StatusCodes.Created, c.value)
     case c: Result[_, A] =>   complete(StatusCodes.OK, c.value)
     case c: Updated[_, A] =>  complete(StatusCodes.OK, c.newValue)

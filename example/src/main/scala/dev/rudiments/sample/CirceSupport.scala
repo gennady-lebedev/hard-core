@@ -37,6 +37,10 @@ object CirceSupport extends AutoDerivation with FailFastCirceSupport {
     })
   }
 
+  implicit def queryEncoder[A: Encoder]: Encoder[QueryResult[A]] = new Encoder[QueryResult[A]] {
+    override def apply(a: QueryResult[A]): Json = a.values.asJson
+  }
+
   implicit def instanceEncoder[A: Encoder]: Encoder[Instance[A]] =
     implicitly[Encoder[A]].contramap(_.value)
 

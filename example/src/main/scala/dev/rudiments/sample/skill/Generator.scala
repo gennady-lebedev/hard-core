@@ -1,8 +1,10 @@
 package dev.rudiments.sample.skill
 
+import akka.actor.ActorSystem
 import com.typesafe.scalalogging.StrictLogging
 import dev.rudiments.hardcore.dsl.{ID, _}
 import dev.rudiments.hardcore.dsl.ID._
+import dev.rudiments.hardcore.eventstore.ActorMind
 import dev.rudiments.hardcore.repo.memory.MemoryRepo
 import dev.rudiments.sample.domain.{GeneratedConfig, GeneratedValues, GeneratorConfig}
 
@@ -48,6 +50,13 @@ object Generator extends StrictLogging {
       generatedValues.createAll(values).map {
         case AllCreated(_) => ValuesGenerated(generated, values)
       }.unsafeRunSync()
+  }
+
+  def teach(implicit sys: ActorSystem): ActorMind = {
+    new ActorMind()
+      .realize(configs)
+      .discover(generateResolver)(generateConfig)
+      .discover(generateResolver)(generateValues)
   }
 }
 

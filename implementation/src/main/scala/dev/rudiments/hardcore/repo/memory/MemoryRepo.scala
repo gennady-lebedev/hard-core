@@ -60,7 +60,7 @@ class MemoryRepo[A](implicit meta: Meta[A]) extends PlainRepository[A] {
     AllDeleted[ID[A], A]()
   }
 
-  override def find(query: Query[A]): IO[QueryResult[A]] = IO {
-    throw NotImplemented("Query API on MemoryRepo")
+  override def find(query: Query[A]): IO[QueryResult[A]] = IO { //TODO make real implementation
+    QueryResult(query, content.values.seq.toSeq, content.size)
   }
 }

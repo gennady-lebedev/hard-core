@@ -26,6 +26,8 @@ trait WriteRepository[K ,V] extends ReadRepository[K, V] with PF1 {
   override def isDefinedAt(x: Command): Boolean = handle.isDefinedAt(x)
 
   val io: PartialFunction[Command, IO[Event]] = {
+    case c:Query[V] => find(c)
+
     case c:Create[K, V] =>  create(c.key, c.value)
     case c:Read[K, V] =>    get(c.key)
     case c:Update[K, V] =>  update(c.key, c.value)

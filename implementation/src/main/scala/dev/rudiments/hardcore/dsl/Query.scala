@@ -8,7 +8,12 @@ case class Query[A](
   filters: Seq[Filter[A]] = Seq.empty,
   sorting: Seq[Sort[A]] = Seq.empty,
   page: Paging = Paging.default
-)
+) extends Command
+
+object Query {
+  def default[A]: Query[A] = Query(Seq.empty, Seq.empty, Paging.default)
+  def all[A]: Query[A] = Query(Seq.empty, Seq.empty, All)
+}
 
 case class Filter[A](field: String, condition: Predicate)
 
@@ -45,4 +50,4 @@ object SortOrder extends Enum[SortOrder] {
   case object Desc extends SortOrder
 }
 
-case class QueryResult[A](query: Query[A], values: Seq[A], count: Long)
+case class QueryResult[A](query: Query[A], values: Seq[A], count: Long) extends Event
