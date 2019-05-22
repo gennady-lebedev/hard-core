@@ -15,30 +15,45 @@ class CrudRouter[A : Meta : Encoder : Decoder](
   import dev.rudiments.hardcore.http.CirceSupport._
   import dev.rudiments.hardcore.dsl.ID._
 
-  override val routes: Route = pathPrefix(prefix) {
-    pathEndOrSingleSlash {
-      get {
-        responseWith(handler(Query.all))
-      } ~ post {
-        entity(as[A]) { value =>
-          responseWith(handler(Create(value.identify, value)))
-        }
-      } ~ put {
-        entity(as[List[A]]) { batch =>
-          responseWith(handler(CreateAll(batch.groupBy(_.identify).mapValues(_.head))))
-        }
-      } ~ delete {
-        responseWith(handler(DeleteAll()))
+  override lazy val routes: Route = pathPrefix(prefix) {
+    pathRoute ~ idDirective { id =>
+      idRoute(id)
+    }
+  }
+
+  def pathRoute: Route = pathEndOrSingleSlash {
+    get {
+      responseWith(handler(Query.all))
+    } ~ post {
+      entity(as[A]) { value =>
+        responseWith(handler(Create(value.identify, value)))
       }
-    } ~ idDirective { id =>
-      get {
-        responseWith(handler(Read(id)))
-      } ~ put {
-        entity(as[A]) { newValue =>
-          responseWith(handler(Update(newValue.identify, newValue)))
+    } ~ put {
+      entity(as[List[A]]) { batch =>
+        responseWith(handler(CreateAll(batch.groupBy(_.identify).mapValues(_.head))))
+      }
+    } ~ delete {
+      responseWith(handler(DeleteAll()))
+    }
+  }
+
+  def idRoute(id: ID[A]): Route =
+    get {
+      responseWith(handler(Read(id)))
+    } ~ put {
+      entity(as[A]) { newValue =>
+        responseWith(handler(Update(newValue.identify, newValue)))
+      }
+    } ~ delete {
+      responseWith(handler(Delete[ID[A], A](id)))
+    }
+
+  def withExtraIdCommand(suffix: String, f: ID[A] => Command): CrudRouter[A] = {
+    new CrudRouter[A](prefix, handler, idDirective) {
+      override def idRoute(id: ID[A]): Route = super.idRoute(id) ~ path(suffix) {
+        post {
+          responseWith(handler(f(id)))
         }
-      } ~ delete {
-        responseWith(handler(Delete[ID[A], A](id)))
       }
     }
   }

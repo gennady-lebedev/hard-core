@@ -8,6 +8,7 @@ import akka.stream.Materializer
 import com.typesafe.config.Config
 import dev.rudiments.hardcore.http.{CrudRouter, IDPath, RootRouter}
 import dev.rudiments.sample.domain.{GeneratedConfig, GeneratedValues, GeneratorConfig}
+import dev.rudiments.sample.skill.GenerateConfig
 import dev.rudiments.sample.skill.Generator._
 
 object AppContext {
@@ -19,7 +20,8 @@ object AppContext {
       config,
       new HealthRouter,
       new CrudRouter[Item]("item", itemRepo, IDPath[Item, Long]),
-      new CrudRouter[GeneratorConfig]("config", teach, IDPath[GeneratorConfig, Long]),
+      new CrudRouter[GeneratorConfig]("config", teach, IDPath[GeneratorConfig, Long])
+        .withExtraIdCommand("generate", id => GenerateConfig(id)),
       new CrudRouter[GeneratedConfig]("generated", generatedConfigs, IDPath[GeneratedConfig, Long]),
       new CrudRouter[GeneratedValues]("values", generatedValues, IDPath[GeneratedValues, Long])
     )

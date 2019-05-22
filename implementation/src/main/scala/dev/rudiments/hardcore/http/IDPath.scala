@@ -10,10 +10,10 @@ import scala.reflect.runtime.universe._
 
 object IDPath {
   def apply[A, K : TypeTag]: Directive1[ID[A]] = {
-         if(typeOf[K] =:= typeOf[Long])   path(LongNumber).map(l => ID[A, Long](l))
-    else if(typeOf[K] =:= typeOf[Int])    path(IntNumber).map(i => ID[A, Int](i))
-    else if(typeOf[K] =:= typeOf[String]) path(Segment).map(s => ID[A, String](s))
-    else if(typeOf[K] =:= typeOf[Date])   path(Segment).map(s => ID[A, Date](Date.valueOf(s)))
+         if(typeOf[K] =:= typeOf[Long])   pathPrefix(LongNumber).map(l => ID[A, Long](l))
+    else if(typeOf[K] =:= typeOf[Int])    pathPrefix(IntNumber).map(i => ID[A, Int](i))
+    else if(typeOf[K] =:= typeOf[String]) pathPrefix(Segment).map(s => ID[A, String](s))
+    else if(typeOf[K] =:= typeOf[Date])   pathPrefix(Segment).map(s => ID[A, Date](Date.valueOf(s)))
     else ???
   }
 }
