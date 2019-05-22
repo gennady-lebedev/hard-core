@@ -6,7 +6,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import dev.rudiments.hardcore.dsl.SortOrder.{Asc, Desc}
 import dev.rudiments.hardcore.dsl._
 import dev.rudiments.sample.domain.DayOfWeek
-import enumeratum.EnumEntry
+import enumeratum._
 import io.circe.Decoder.Result
 import io.circe._
 import io.circe.generic.extras.{AutoDerivation, Configuration}
@@ -47,7 +47,7 @@ object CirceSupport extends AutoDerivation with FailFastCirceSupport {
   implicit def refFormat[A: Encoder]: Encoder[Ref[A]] with Decoder[Ref[A]] = new Encoder[Ref[A]] with Decoder[Ref[A]] {
     override def apply(a: Ref[A]): Json = a match {
       case i: Instance[A] => implicitly[Encoder[Instance[A]]].apply(i)
-      case ID0() => Json.obj()
+      case ID0() => Json.arr()
       case ID1(id) => id.toString.asJson
       case ID2(id1, id2) => Json.arr(id1.toString.asJson, id2.toString.asJson)
       case AutoID() => Json.fromString("auto")
@@ -57,10 +57,17 @@ object CirceSupport extends AutoDerivation with FailFastCirceSupport {
     override def apply(c: HCursor): Result[Ref[A]] = ???
   }
 
-  implicit def enumFormat: Encoder[EnumEntry] with Decoder[EnumEntry] = new Encoder[EnumEntry] with Decoder[EnumEntry] {
-    override def apply(a: EnumEntry): Json = a.entryName.asJson
+  implicit def enumFormat[E <: EnumEntry](enum: Enum[E]): Encoder[E] with Decoder[E] = new Encoder[E] with Decoder[E] {
+    override def apply(a: E): Json = a.entryName.asJson
 
-    override def apply(c: HCursor): Result[EnumEntry] = ???
+    override def apply(c: HCursor): Result[E] = implicitly[Decoder[String]].apply(c).flatMap { s =>
+      val maybeMember = enum.withNameOption(s)
+      maybeMember match {
+        case Some(member) => Right(member)
+        case _ =>
+          Left(DecodingFailure(s"'$s' is not a member of enum $enum", c.history))
+      }
+    }
   }
 
   implicit def daysMapFormat[V: Encoder](implicit mapDecoder: Decoder[Map[String, V]]): Encoder[Map[DayOfWeek, V]] with Decoder[Map[DayOfWeek, V]] =
