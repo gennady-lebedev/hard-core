@@ -10,7 +10,8 @@ import dev.rudiments.hardcore.dsl._
 class CrudRouter[A : Meta : Encoder : Decoder](
   prefix: String,
   handler: PF1,
-  idDirective: Directive1[ID[A]]
+  idDirective: Directive1[ID[A]],
+  extraIdCommands: Map[String, ID[A] => Command] = Map.empty[String, ID[A] => Command]
 ) extends Router {
   import dev.rudiments.hardcore.http.CirceSupport._
   import dev.rudiments.hardcore.dsl.ID._
@@ -37,7 +38,7 @@ class CrudRouter[A : Meta : Encoder : Decoder](
     }
   }
 
-  def idRoute(id: ID[A]): Route =
+  def idRoute(id: ID[A]): Route = pathEndOrSingleSlash {
     get {
       responseWith(handler(Read(id)))
     } ~ put {
@@ -47,16 +48,13 @@ class CrudRouter[A : Meta : Encoder : Decoder](
     } ~ delete {
       responseWith(handler(Delete[ID[A], A](id)))
     }
-
-  def withExtraIdCommand(suffix: String, f: ID[A] => Command): CrudRouter[A] = {
-    new CrudRouter[A](prefix, handler, idDirective) {
-      override def idRoute(id: ID[A]): Route = super.idRoute(id) ~ path(suffix) {
-        post {
-          responseWith(handler(f(id)))
-        }
+  } ~ extraIdCommands.map { case (suffix, f) =>
+    path(suffix) {
+      post {
+        responseWith(handler(f(id)))
       }
     }
-  }
+  }.foldRight(reject(): Route)(_ ~ _)
 
   def responseWith(event: Event): StandardRoute = event match {
     case c: QueryResult[A] =>  complete(StatusCodes.OK, c.values)

@@ -20,8 +20,12 @@ object AppContext {
       config,
       new HealthRouter,
       new CrudRouter[Item]("item", itemRepo, IDPath[Item, Long]),
-      new CrudRouter[GeneratorConfig]("config", teach, IDPath[GeneratorConfig, Long])
-        .withExtraIdCommand("generate", id => GenerateConfig(id)),
+      new CrudRouter[GeneratorConfig](
+        "config",
+        teach,
+        IDPath[GeneratorConfig, Long],
+        Map("generate" -> { id => GenerateConfig(id) })
+      ),
       new CrudRouter[GeneratedConfig]("generated", generatedConfigs, IDPath[GeneratedConfig, Long]),
       new CrudRouter[GeneratedValues]("values", generatedValues, IDPath[GeneratedValues, Long])
     )
