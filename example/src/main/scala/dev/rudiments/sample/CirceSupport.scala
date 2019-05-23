@@ -54,7 +54,7 @@ object CirceSupport extends AutoDerivation with FailFastCirceSupport {
       case other => throw new IllegalArgumentException(s"$other not supported")
     }
 
-    override def apply(c: HCursor): Result[Ref[A]] = ???
+    override def apply(c: HCursor): Result[Ref[A]] = Decoder.decodeString(c).map(s => ID(s.toLong))
   }
 
   implicit def enumFormat[E <: EnumEntry](enum: Enum[E]): Encoder[E] with Decoder[E] = new Encoder[E] with Decoder[E] {
