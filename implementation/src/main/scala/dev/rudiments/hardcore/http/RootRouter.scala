@@ -34,7 +34,7 @@ class RootRouter(config: Config, routers: Router*)
   override val routes: Route =
     cors {
       pathPrefix(prefix) {
-        routers.map(_.routes).reduce(_ ~ _)
+        routers.map(_.routes).foldRight(reject(): Route)(_ ~ _)
       }
     }
 
