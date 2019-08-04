@@ -1,14 +1,14 @@
 # Rudimental Architecture road map
 
 ## memory of CRUD
-* Commands and Events
-* HTTP Port
-* in-memory Adapter
-* Memory as collection
-* CRUD
+* `Cause` and `Effect`s
+* HTTP `Port`
+* `Memory` and `Projection` `Adapter`
+* `Memory` as collection
+* CRUD operations
 
 ## pipes and vents
-* Features as traits on Command
+* Features as traits on Cause
 * Usage of features in Pipes
     * Lock by Type and ID
     * remember in Memory
